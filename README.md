@@ -21,9 +21,11 @@ show pour montrer l'arbre
 flags utilisé 
 
 1. -Wall
-Raison : Active la plupart des avertissements importants pour détecter des problèmes courants comme des variables inutilisées ou des déclarations implicites.
+Active la plupart des avertissements importants pour détecter des problèmes courants 
 2. -Wextra
-Raison : Ajoute des avertissements supplémentaires pour des cas subtils comme des paramètres inutilisés ou des macros inutilisées.
+Ajoute des avertissements supplémentaires comme pour des paramètres inutilisés
+-g
+Inclut des informations de débogage
 
 
 
