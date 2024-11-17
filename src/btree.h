@@ -10,7 +10,6 @@ typedef struct ArbreNoeud {
     long offsetGauche;      
 } ArbreNoeud;
 
-// Fonctions principales
 ArbreNoeud* creerNoeud(int id, const char* contenu);
 long sauvegarderNoeud(FILE* fichier, ArbreNoeud* noeud);
 void mettreAJourNoeud(FILE* fichier, long offset, ArbreNoeud* noeud);

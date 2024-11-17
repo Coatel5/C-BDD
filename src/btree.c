@@ -18,10 +18,10 @@ ArbreNoeud* creerNoeud(int id, const char* contenu) {
 }
 
 long sauvegarderNoeud(FILE* fichier, ArbreNoeud* noeud) {
-    fseek(fichier, 0, SEEK_END); // Aller à la fin du fichier
-    long offset = ftell(fichier); // Obtenir la position actuelle
-    fwrite(noeud, sizeof(ArbreNoeud), 1, fichier); // Écrire le nœud
-    return offset; // Retourner l'offset du nœud
+    fseek(fichier, 0, SEEK_END); 
+    long offset = ftell(fichier);
+    fwrite(noeud, sizeof(ArbreNoeud), 1, fichier); 
+    return offset;
 }
 
 void mettreAJourNoeud(FILE* fichier, long offset, ArbreNoeud* noeud) {
@@ -30,13 +30,13 @@ void mettreAJourNoeud(FILE* fichier, long offset, ArbreNoeud* noeud) {
 }
 
 ArbreNoeud* chargerNoeud(FILE* fichier, long offset) {
-    fseek(fichier, offset, SEEK_SET); // Aller à l'offset spécifié
+    fseek(fichier, offset, SEEK_SET); 
     ArbreNoeud* noeud = (ArbreNoeud*)malloc(sizeof(ArbreNoeud));
     if (!noeud) {
         fprintf(stderr, "Erreur : Allocation mémoire échouée.\n");
         exit(EXIT_FAILURE);
     }
-    fread(noeud, sizeof(ArbreNoeud), 1, fichier); // Lire le nœud
+    fread(noeud, sizeof(ArbreNoeud), 1, fichier); 
     return noeud;
 }
 
