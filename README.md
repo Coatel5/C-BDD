@@ -24,7 +24,7 @@ flags utilisé
 Active la plupart des avertissements importants pour détecter des problèmes courants 
 2. -Wextra
 Ajoute des avertissements supplémentaires comme pour des paramètres inutilisés
--g
+3. -g
 Inclut des informations de débogage
 
 
