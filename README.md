@@ -1,5 +1,5 @@
 # class_db
-un projet de srockage de données avec un arbre binaire
+un projet de stockage de données avec un arbre binaire
 
 make pour créer l'exe
 
