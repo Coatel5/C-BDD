@@ -97,6 +97,11 @@ void afficherArbreTexte(ArbreNoeud* racine, int profondeur) {
 }
 
 long ajouterDonneeTexte(ArbreNoeud* racine, int parentID, const char* contenu, char direction, int* idCourant) {
+    if (racine == NULL) {
+        fprintf(stderr, "Erreur : Arbre vide.\n");
+        return -1;
+    }
+
     ArbreNoeud* parent = NULL;
     ArbreNoeud* stack[1000]; 
     int top = 0;
@@ -130,15 +135,15 @@ long ajouterDonneeTexte(ArbreNoeud* racine, int parentID, const char* contenu, c
         return -1;
     }
 
-    (*idCourant)++;
+    if (idCourant != NULL) {
+        (*idCourant)++;
+    }
     ArbreNoeud* nouveau = creerNoeud(*idCourant, contenu);
 
     if (direction == 'G') {
         parent->gauche = nouveau;
-        parent->offsetGauche = nouveau->id;
     } else if (direction == 'D') {
         parent->droite = nouveau;
-        parent->offsetDroite = nouveau->id;
     }
 
     return nouveau->id;

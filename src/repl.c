@@ -7,25 +7,28 @@
 #include <unistd.h>
 #include <stdbool.h>
 
+
+
 typedef enum {
-  META_COMMAND_SUCCESS,
-  META_COMMAND_UNRECOGNIZED_COMMAND
+    META_COMMAND_SUCCESS,
+    META_COMMAND_UNRECOGNIZED_COMMAND
+
 } MetaCommandResult;
 
 typedef enum { PREPARE_SUCCESS, PREPARE_UNRECOGNIZED_STATEMENT } PrepareResult;
-typedef enum { STATEMENT_INSERT } StatementType;
+typedef enum { STATEMENT_INSERT, STATEMENT_SHOW } StatementType;
 
 typedef struct {
-  StatementType type;
-  int parent_id; 
-  char direction; 
-  char content[100]; 
+    StatementType type;
+    int parent_id; 
+    char direction; 
+    char content[100]; 
 } Statement;
-
+ 
 typedef struct {
-  char* buffer;
-  size_t buffer_length;
-  ssize_t input_length;
+    char* buffer;
+    size_t buffer_length;
+    ssize_t input_length;
 } InputBuffer;
 
 InputBuffer* new_input_buffer() {
@@ -83,6 +86,11 @@ PrepareResult prepare_statement(InputBuffer* input_buffer, Statement* statement)
         return PREPARE_SUCCESS;
     }
 
+    if (strcmp(input_buffer->buffer, "show") == 0) {
+        statement->type = STATEMENT_SHOW;
+        return PREPARE_SUCCESS;
+    }
+
     return PREPARE_UNRECOGNIZED_STATEMENT;
 }
 
@@ -93,6 +101,13 @@ void execute_statement(Statement* statement, ArbreNoeud* racine, int* idCourant)
         } else {
             printf("Nœud inséré avec succès.\n");
         }
+    } else if (statement->type == STATEMENT_SHOW) {
+        if (racine == NULL) {
+            printf("Erreur : L'arbre est vide.\n");
+        } else {
+            printf("\nStructure de l'arbre :\n");
+            afficherArbreTexte(racine, 0);
+        }
     }
 }
 
@@ -102,6 +117,7 @@ void repl(ArbreNoeud* racine, int* idCourant) {
     printf("  - .exit      : Quitter le programme\n");
     printf("  - insert     : Ajouter un nœud à l'arbre\n");
     printf("                Syntaxe : insert <parent_id> <direction> <content>\n");
+    printf("  - show       : Afficher l'arbre\n");
     printf("\n");
 
     InputBuffer* input_buffer = new_input_buffer();
