@@ -1,9 +1,9 @@
 #ifndef REPL_H
 #define REPL_H
 
-#include <stdio.h>
 #include "btree.h"
+#include <stdio.h>
 
-void repl(FILE* fichier, long racineOffset, int* idCourant);
+void repl(ArbreNoeud* racine, int* idCourant);
 
 #endif

@@ -1,7 +1,7 @@
-#include "btree.h"
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include "btree.h"
 
 ArbreNoeud* creerNoeud(int id, const char* contenu) {
     ArbreNoeud* nouveau = (ArbreNoeud*)malloc(sizeof(ArbreNoeud));
@@ -12,103 +12,134 @@ ArbreNoeud* creerNoeud(int id, const char* contenu) {
     nouveau->id = id;
     strncpy(nouveau->contenu, contenu, sizeof(nouveau->contenu) - 1);
     nouveau->contenu[sizeof(nouveau->contenu) - 1] = '\0';
-    nouveau->offsetDroite = -1;
     nouveau->offsetGauche = -1;
+    nouveau->offsetDroite = -1;
     return nouveau;
 }
 
-long sauvegarderNoeud(FILE* fichier, ArbreNoeud* noeud) {
-    fseek(fichier, 0, SEEK_END); 
-    long offset = ftell(fichier);
-    fwrite(noeud, sizeof(ArbreNoeud), 1, fichier); 
-    return offset;
+void libererArbre(ArbreNoeud* racine) {
+    if (racine != NULL) {
+        libererArbre(racine->gauche);
+        libererArbre(racine->droite);
+        free(racine);
+    }
 }
 
-void mettreAJourNoeud(FILE* fichier, long offset, ArbreNoeud* noeud) {
-    fseek(fichier, offset, SEEK_SET);
-    fwrite(noeud, sizeof(ArbreNoeud), 1, fichier);
+void sauvegarderNoeudTexte(FILE* fichier, ArbreNoeud* noeud) {
+    fprintf(fichier, "%d|%s|%ld|%ld\n", 
+            noeud->id, 
+            noeud->contenu, 
+            noeud->offsetGauche, 
+            noeud->offsetDroite);
 }
 
-ArbreNoeud* chargerNoeud(FILE* fichier, long offset) {
-    fseek(fichier, offset, SEEK_SET); 
+ArbreNoeud* chargerNoeudTexte(char* ligne) {
     ArbreNoeud* noeud = (ArbreNoeud*)malloc(sizeof(ArbreNoeud));
     if (!noeud) {
         fprintf(stderr, "Erreur : Allocation mémoire échouée.\n");
         exit(EXIT_FAILURE);
     }
-    fread(noeud, sizeof(ArbreNoeud), 1, fichier); 
+    sscanf(ligne, "%d|%99[^|]|%ld|%ld", 
+           &noeud->id, 
+           noeud->contenu, 
+           &noeud->offsetGauche, 
+           &noeud->offsetDroite);
     return noeud;
 }
 
-long rechercherOffsetParID(FILE* fichier, int idRecherche) {
-    fseek(fichier, 0, SEEK_SET); 
+ArbreNoeud* chargerArbreTexte(FILE* fichier) {
+    char ligne[256];
+    ArbreNoeud* racine = NULL;
+    ArbreNoeud* noeuds[1000] = {NULL};
 
-    while (!feof(fichier)) {
-        long offset = ftell(fichier);
-        ArbreNoeud* noeud = chargerNoeud(fichier, offset);
+    while (fgets(ligne, sizeof(ligne), fichier)) {
+        ArbreNoeud* noeud = chargerNoeudTexte(ligne);
+        noeuds[noeud->id] = noeud;
 
-        if (noeud->id == idRecherche) {
-            free(noeud);
-            return offset; 
+        if (racine == NULL) {
+            racine = noeud;
         }
 
-        free(noeud);
+        if (noeud->offsetGauche != -1) {
+            noeud->gauche = noeuds[noeud->offsetGauche];
+        }
+        if (noeud->offsetDroite != -1) {
+            noeud->droite = noeuds[noeud->offsetDroite];
+        }
     }
 
-    return -1; 
+    return racine;
 }
 
-long ajouterDonnee(FILE* fichier, int parentID, const char* contenu, char direction, int* idCourant) {
-    long parentOffset = rechercherOffsetParID(fichier, parentID);
-    if (parentOffset == -1) {
+void sauvegarderArbreTexte(FILE* fichier, ArbreNoeud* racine) {
+    if (racine == NULL) {
+        return;
+    }
+
+    sauvegarderNoeudTexte(fichier, racine);
+    sauvegarderArbreTexte(fichier, racine->gauche);
+    sauvegarderArbreTexte(fichier, racine->droite);
+}
+
+void afficherArbreTexte(ArbreNoeud* racine, int profondeur) {
+    if (racine == NULL) {
+        return;
+    }
+
+    afficherArbreTexte(racine->droite, profondeur + 1);
+
+    for (int i = 0; i < profondeur; i++) {
+        printf("    ");
+    }
+    printf("%d (%s)\n", racine->id, racine->contenu);
+
+    afficherArbreTexte(racine->gauche, profondeur + 1);
+}
+
+long ajouterDonneeTexte(ArbreNoeud* racine, int parentID, const char* contenu, char direction, int* idCourant) {
+    ArbreNoeud* parent = NULL;
+    ArbreNoeud* stack[1000]; 
+    int top = 0;
+
+    stack[top++] = racine;
+    while (top > 0) {
+        ArbreNoeud* courant = stack[--top];
+        if (courant->id == parentID) {
+            parent = courant;
+            break;
+        }
+        if (courant->droite) {
+            stack[top++] = courant->droite;
+        }
+        if (courant->gauche) {
+            stack[top++] = courant->gauche;
+        }
+    }
+
+    if (parent == NULL) {
         fprintf(stderr, "Erreur : Parent avec ID %d introuvable.\n", parentID);
         return -1;
     }
 
-    ArbreNoeud* parent = chargerNoeud(fichier, parentOffset);
-
-    if (direction == 'G' && parent->offsetGauche != -1) {
+    if (direction == 'G' && parent->gauche != NULL) {
         fprintf(stderr, "Erreur : Le côté gauche de l'ID %d est déjà occupé.\n", parent->id);
-        free(parent);
         return -1;
     }
-    if (direction == 'D' && parent->offsetDroite != -1) {
+    if (direction == 'D' && parent->droite != NULL) {
         fprintf(stderr, "Erreur : Le côté droit de l'ID %d est déjà occupé.\n", parent->id);
-        free(parent);
         return -1;
     }
 
     (*idCourant)++;
     ArbreNoeud* nouveau = creerNoeud(*idCourant, contenu);
-    long offsetNouveau = sauvegarderNoeud(fichier, nouveau);
 
     if (direction == 'G') {
-        parent->offsetGauche = offsetNouveau;
+        parent->gauche = nouveau;
+        parent->offsetGauche = nouveau->id;
     } else if (direction == 'D') {
-        parent->offsetDroite = offsetNouveau;
-    }
-    mettreAJourNoeud(fichier, parentOffset, parent);
-
-    free(parent);
-    free(nouveau);
-    return offsetNouveau;
-}
-
-void afficherArbre(FILE* fichier, long offset, int profondeur) {
-    if (offset == -1) {
-        return;
+        parent->droite = nouveau;
+        parent->offsetDroite = nouveau->id;
     }
 
-    ArbreNoeud* noeud = chargerNoeud(fichier, offset);
-
-    afficherArbre(fichier, noeud->offsetDroite, profondeur + 1);
-
-    for (int i = 0; i < profondeur; i++) {
-        printf("    ");
-    }
-    printf("%d (%s)\n", noeud->id, noeud->contenu);
-
-    afficherArbre(fichier, noeud->offsetGauche, profondeur + 1);
-
-    free(noeud);
+    return nouveau->id;
 }

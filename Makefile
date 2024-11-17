@@ -18,11 +18,11 @@ $(OBJ_DIR)/btree.o: $(SRC_DIR)/btree.c $(SRC_DIR)/btree.h
 	mkdir -p $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $(SRC_DIR)/btree.c -o $(OBJ_DIR)/btree.o
 
-$(OBJ_DIR)/repl.o: $(SRC_DIR)/repl.c $(SRC_DIR)/repl.h $(SRC_DIR)/btree.h
+$(OBJ_DIR)/repl.o: $(SRC_DIR)/repl.c $(SRC_DIR)/btree.h $(SRC_DIR)/repl.h
 	mkdir -p $(OBJ_DIR)
 	$(CC) $(CFLAGS) -c $(SRC_DIR)/repl.c -o $(OBJ_DIR)/repl.o
 
 clean:
-	rm -rf $(OBJ_DIR) $(TARGET) arbre.bin
+	rm -rf $(OBJ_DIR) $(TARGET) btree.txt
 
 rebuild: clean all
