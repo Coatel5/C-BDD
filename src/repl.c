@@ -100,6 +100,14 @@ void execute_statement(Statement* statement, ArbreNoeud* racine, int* idCourant)
             printf("Erreur : Impossible d'insérer le nœud.\n");
         } else {
             printf("Nœud inséré avec succès.\n");
+            FILE* fichier = fopen("btree.txt", "w");
+            if (fichier) {
+                sauvegarderArbreTexte(fichier, racine);
+                fclose(fichier);
+                printf("Sauvegarde effectuée.\n");
+            } else {
+                fprintf(stderr, "Erreur : Impossible de sauvegarder dans btree.txt.\n");
+            }
         }
     } else if (statement->type == STATEMENT_SHOW) {
         if (racine == NULL) {
@@ -110,6 +118,8 @@ void execute_statement(Statement* statement, ArbreNoeud* racine, int* idCourant)
         }
     }
 }
+
+
 
 void repl(ArbreNoeud* racine, int* idCourant) {
     printf("Bienvenue dans votre base de données basée sur un arbre binaire !\n");

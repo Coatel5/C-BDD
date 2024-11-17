@@ -22,3 +22,5 @@ long ajouterDonneeTexte(ArbreNoeud* racine, int parentID, const char* contenu, c
 void afficherArbreTexte(ArbreNoeud* racine, int profondeur);
 
 #endif
+
+

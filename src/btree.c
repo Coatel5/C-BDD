@@ -12,8 +12,8 @@ ArbreNoeud* creerNoeud(int id, const char* contenu) {
     nouveau->id = id;
     strncpy(nouveau->contenu, contenu, sizeof(nouveau->contenu) - 1);
     nouveau->contenu[sizeof(nouveau->contenu) - 1] = '\0';
-    nouveau->offsetGauche = -1;
-    nouveau->offsetDroite = -1;
+    nouveau->gauche = NULL;
+    nouveau->droite = NULL;
     return nouveau;
 }
 
@@ -26,11 +26,11 @@ void libererArbre(ArbreNoeud* racine) {
 }
 
 void sauvegarderNoeudTexte(FILE* fichier, ArbreNoeud* noeud) {
-    fprintf(fichier, "%d|%s|%ld|%ld\n", 
-            noeud->id, 
-            noeud->contenu, 
-            noeud->offsetGauche, 
-            noeud->offsetDroite);
+    fprintf(fichier, "%d|%s|%d|%d\n",
+            noeud->id,
+            noeud->contenu,
+            noeud->gauche ? noeud->gauche->id : -1,
+            noeud->droite ? noeud->droite->id : -1);
 }
 
 ArbreNoeud* chargerNoeudTexte(char* ligne) {
@@ -39,32 +39,54 @@ ArbreNoeud* chargerNoeudTexte(char* ligne) {
         fprintf(stderr, "Erreur : Allocation mémoire échouée.\n");
         exit(EXIT_FAILURE);
     }
-    sscanf(ligne, "%d|%99[^|]|%ld|%ld", 
-           &noeud->id, 
-           noeud->contenu, 
-           &noeud->offsetGauche, 
-           &noeud->offsetDroite);
+    int gauche, droite;
+    sscanf(ligne, "%d|%99[^|]|%d|%d",
+           &noeud->id,
+           noeud->contenu,
+           &gauche,
+           &droite);
+    noeud->gauche = (gauche != -1) ? (ArbreNoeud*)(long)gauche : NULL;
+    noeud->droite = (droite != -1) ? (ArbreNoeud*)(long)droite : NULL;
     return noeud;
 }
 
 ArbreNoeud* chargerArbreTexte(FILE* fichier) {
     char ligne[256];
+    ArbreNoeud* noeuds[1000] = {NULL}; 
     ArbreNoeud* racine = NULL;
-    ArbreNoeud* noeuds[1000] = {NULL};
 
     while (fgets(ligne, sizeof(ligne), fichier)) {
-        ArbreNoeud* noeud = chargerNoeudTexte(ligne);
+        ArbreNoeud* noeud = (ArbreNoeud*)malloc(sizeof(ArbreNoeud));
+        if (!noeud) {
+            fprintf(stderr, "Erreur : Allocation mémoire échouée.\n");
+            exit(EXIT_FAILURE);
+        }
+        int gauche, droite;
+        sscanf(ligne, "%d|%99[^|]|%d|%d",
+               &noeud->id,
+               noeud->contenu,
+               &gauche,
+               &droite);
+
+        noeud->gauche = (gauche != -1) ? (ArbreNoeud*)(long)gauche : NULL;
+        noeud->droite = (droite != -1) ? (ArbreNoeud*)(long)droite : NULL;
+
         noeuds[noeud->id] = noeud;
 
         if (racine == NULL) {
             racine = noeud;
         }
+    }
 
-        if (noeud->offsetGauche != -1) {
-            noeud->gauche = noeuds[noeud->offsetGauche];
-        }
-        if (noeud->offsetDroite != -1) {
-            noeud->droite = noeuds[noeud->offsetDroite];
+    for (int i = 0; i < 1000; i++) {
+        if (noeuds[i] != NULL) {
+            ArbreNoeud* noeud = noeuds[i];
+            if (noeud->gauche != NULL) {
+                noeud->gauche = noeuds[(long)noeud->gauche];
+            }
+            if (noeud->droite != NULL) {
+                noeud->droite = noeuds[(long)noeud->droite];
+            }
         }
     }
 
@@ -103,7 +125,7 @@ long ajouterDonneeTexte(ArbreNoeud* racine, int parentID, const char* contenu, c
     }
 
     ArbreNoeud* parent = NULL;
-    ArbreNoeud* stack[1000]; 
+    ArbreNoeud* stack[1000];
     int top = 0;
 
     stack[top++] = racine;
