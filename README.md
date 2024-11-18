@@ -1,4 +1,5 @@
 # class_db
+Asfez Mike SI1
 un projet de stockage de données avec un arbre binaire
 
 make pour créer l'exe
